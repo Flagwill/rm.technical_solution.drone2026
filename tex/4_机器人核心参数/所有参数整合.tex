@@ -1,0 +1,126 @@
+\chapter{机器人核心参数}
+\section{机械参数} 
+% 官方要求：重量、重心；尺寸（长宽高）；主要传感器型号、参数、数量。
+本赛季研发的xx机器人是xx底盘式、xx云台式的哨兵，其机械结构设计紧凑，合理且有效地利用空间。
+\subsection{基本参数}
+
+xx机器人的基本参数如 \tabref {tab:基本参数_机器人核心参数}所示，由于大弹仓的存在其长度与宽度大于xx，高度接近官方规则限高$\qty{700}{\mm}$,机器人重心居中，位于Yaw轴轴线上，整体机械参数较为合理。
+
+\begin{table}[hbtp!]
+    \centering
+    \begin{tabular}{ m{2cm}  m{12cm} }
+    \toprule
+      基本参数    &   参数量化  \\
+     \midrule
+     尺寸       & \makecell[l]{长：$\qty{549.243}{\mm}$，宽：$\qty{580.000}{\mm}$，高：$\qty{697.009}{\mm}$ \\ 如  \figref{fig:rm_ci_机器人核心参数}所示，参数都在规则限制之内}\\ \\
+     质量       &  $\qty{17.5}{\kg}$     \\  \\
+     重心位置   &  位于Yaw轴所在轴线上，且离地$\qty{200}{\mm}$     \\ 
+    \toprule
+    \end{tabular}
+    \caption{机械基本参数}
+    \label{tab:基本参数_机器人核心参数}
+\end{table}
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.5\columnwidth]{figure/机器人核心参数/机器人核心参数.jpg}
+    \caption{机器人尺寸}
+    \label{fig:rm_ci_机器人核心参数}
+\end{figure}
+
+\newpage
+\subsection{机械执行器件}
+
+哨兵机器人的机械执行器件如 \tabref {tab:机械执行器件_机器人核心参数}所示,传统哨兵机器人的Pitch轴传动电机为GM6020，团队自主研发了M3508云台电机，可以用于替代哨兵机器人Pitch轴传动的GM6020电机，所以哨兵机械的执行器件所需的M3508电机为7个，GM6020电机为1个，M2006电机为1个。
+
+\begin{table}[hbtp!]
+    \centering
+    \begin{tabular}{ m{3cm} m{7cm} m{2cm} }
+    \toprule
+    执行元件 &  用途  &  数量（个）  \\
+    \midrule
+    \multirow{2}*{M2006电机}
+       &为拨盘提供动力源      & 1 \\ 
+       &驱动双测速模块互相切换      & 1 \\ 
+    \midrule
+    \multirow{3}*{M3508电机}
+       &为整车的全向移动提供动能      & 4 \\ 
+       &驱使pitch轴转动           & 1 \\ 
+       &为弹丸提供初始动能        & 2 \\ 
+    \midrule
+    \multirow{1}*{GM6020电机}
+       &驱使云台周转运动      & 1 \\ 
+    \toprule
+    \end{tabular}
+    \caption{机械执行器件}
+    \label{tab:机械执行器件_机器人核心参数}
+\end{table}  
+
+
+\section{电路参数}
+%电路功耗、所有电容总量、工作时电压范围等
+\vspace{0.3cm}
+
+整车有两个电容组，超级电容组和浪涌吸收电容组。其容量参数及工作电压如下所示：
+\begin{itemize}
+    \item 超级电容容量：加入保护电路后参数为\SI{15.9}{V}\ /\ \SI{15}{F}，标称容量为\SI{1896.075}{J}。工作电压范围为$7V\sim15.5V$。
+    \item 浪涌吸收电容容量：参数为\SI{50}{V}\ /\ \SI{20}{mF}，标称容量为\SI{25}{J}。工作电压范围为$24V\sim50V$。
+\end{itemize}
+
+\vspace{0.3cm}
+
+车载模块及其用途、设计最大功率：
+\begin{itemize}
+    \item 超级电容充电：用于给超级电容充电，设计最大功率为$\qty{120}{\W}$。
+    \item 超级电容升压：用于将超级电容升压至$\qty{26}{\V}$输出，设计最大功率为$\qty{240}{\W}$。
+    \item NUC供电电源：用于给NUC供电，设计最大功率为$\qty{200}{\W}$。
+    \item IMU: 用于精确获取机器人姿态，提高运动的准确性。
+    \item 荧光充能装置:用于给荧光弹丸进行充能，设计功率为$\qty{1.632}{\W}$。
+\end{itemize}
+
+\section{性能参数}
+%官方要求：机器人其它核心性能参数 - 如: 车体最大移动速度、爬坡角度，云台自由度等
+
+哨兵机器人的性能参数如 \tabref {tab:soldier_parameters}所示，Pitch轴俯角$\ang{30}$，可以击打到贴近哨兵机器人的敌方机器人单位，旋转运动速度为$\qty{12}{\radian\per\second}$，高于普通麦轮步兵机器人。
+
+\begin{table}[hbtp!]
+    \centering
+    \begin{tabular}{ m{4cm}  m{9cm} }
+    \toprule
+      性能参数    &   参数量化  \\
+     \midrule
+     最大运动速度 & 平移$\qty{2.5}{\m\per\second}$、旋转$\qty{12}{\radian\per\second}$ \\ \\
+     最大运动加速度  &  平移$\qty{4}{\m\per\s\squared}$ 、旋转$\qty{18}{\radian\per\s\squared}$   \\ \\
+   
+     最大爬坡角度   &   $\ang{25}$    \\ \\
+     云台自由度 & Yaw轴$\ang{360}$，Pitch轴俯角$\ang{30}$、仰角$\ang{40}$ \\ 
+
+    \toprule
+    \end{tabular}
+    \caption{性能参数}
+    \label{tab:soldier_parameters}
+\end{table}
+
+\section{主要传感器参数}
+%型号、参数、数量
+
+整车的传感器有大恒图像摄像头、海康图像摄像头、IMU、3D激光雷达，其参数如 \tabref{tab:哨兵机器人传感器型号、参数及数量}所示：
+
+\begin{table}[hbtp!]
+    \centering
+    \begin{tabular}{ m{3cm}  m{4cm}  m{6cm} m{1cm}}
+    \toprule
+      传感器名称 & 型号 & 参数 & 数量 \\
+        \midrule
+        大恒图像摄像头 & MER-131-210U3C & 分辨率1280 *1024、帧率(fps)210   &1 \\   
+         \midrule
+         海康图像摄像头 & CA016 & 分辨率1440 *1080、帧率(fps)160   &1 \\ 
+         \midrule
+         IMU & BMI088 & - & 1 \\
+         \midrule
+         3D 激光雷达 & MID-360 & 点云输出 200,000 点/秒，点云帧率 $\qty{10}{\Hz}$ & 1\\
+    \toprule
+    \end{tabular}
+    \caption{哨兵机器人传感器型号、参数及数量}
+    \label{tab:哨兵机器人传感器型号、参数及数量}
+\end{table}

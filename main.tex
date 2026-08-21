@@ -1,0 +1,126 @@
+\documentclass[cn,12pt,base=hide,math=newtx,citestyle=gb7714-2015,bibstyle=gb7714-2015]{elegantbook}
+\linespread{1.5}
+
+\title{空中机器人技术方案}
+\subtitle{RoboMaster 2026}
+
+\author{}
+\institute{上海交通大学 \ 云汉交龙}
+\date{2026年8月}
+% \version{}
+% \bioinfo{自定义}{信息}
+
+\cover{figure/封面/飞机.jpg}
+\logo{figure/封面/Logo.png}
+\usepackage{wrapfig} 
+\usepackage{float}
+% 本文档命令
+\usepackage{gensymb}
+\usepackage{siunitx}
+\usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{listings}
+\usepackage{iitem}
+\usepackage{appendix} 
+%%使用 times new roman字体
+\usepackage{times}
+%%\usepackage{mathptmx}
+\usepackage{booktabs} % table
+\usepackage{multirow} %表格合并
+\usepackage{makecell} %表格换行
+\usepackage{subfigure}
+
+
+\usepackage{stfloats} %图表放置到页面底部
+
+\usepackage{longtable}%长图片
+\usepackage{supertabular}%用于解决跨页表格
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\newcommand\YAMLcolonstyle{\color{red}\mdseries}
+\newcommand\YAMLkeystyle{\color{black}\bfseries}
+\newcommand\YAMLvaluestyle{\color{blue}\mdseries}
+
+\makeatletter
+
+% here is a macro expanding to the name of the language
+% (handy if you decide to change it further down the road)
+\newcommand\language@yaml{yaml}
+
+\expandafter\expandafter\expandafter\lstdefinelanguage
+\expandafter{\language@yaml}
+{
+  keywords={true,false,null,y,n},
+  keywordstyle=\color{darkgray}\bfseries,
+  basicstyle=\YAMLkeystyle,                                 % assuming a key comes first
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\YAMLvaluestyle\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{magenta}]{*},
+  moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:},   % switch to value style at :
+  morestring=[b]',
+  morestring=[b]",
+  literate =    {---}{{\ProcessThreeDashes}}3
+                {>}{{\textcolor{red}\textgreater}}1     
+                {|}{{\textcolor{red}\textbar}}1 
+                {\ -\ }{{\mdseries\ -\ }}3,
+}
+
+% switch to key style at EOL
+\lst@AddToHook{EveryLine}{\ifx\lst@language\language@yaml\YAMLkeystyle\fi}
+\makeatother
+
+% 修改目录深度
+\setcounter{tocdepth}{2}
+
+\addbibresource{reference.bib}  % 加入bib文件用于文献引用。
+
+\sisetup{angle-symbol-degree = ^\circ}
+
+\begin{document}
+\begin{songti}
+\maketitle
+\frontmatter
+
+\include{tex/0_前言/前言}
+\tableofcontents
+
+\mainmatter
+
+% 只有一个人工作时，可以注释掉其他不需要的章节可以让预览变快很多.
+
+\include{tex/1_背景与目标/1_背景与目标}
+
+\include{tex/2_其他学校哨兵机器人分析综述/1_其他学校哨兵机器人分析综述}
+
+\include{tex/3_机器人功能定义/1_底盘功能设计}
+\include{tex/3_机器人功能定义/2_云台功能设计}
+\include{tex/3_机器人功能定义/3_发射功能设计}
+\include{tex/3_机器人功能定义/4_超级电容模组功能设计}
+\include{tex/3_机器人功能定义/5_视觉算法功能设计}
+
+\include{tex/4_机器人核心参数/所有参数整合}
+
+\include{tex/5_设计方案/1_机械结构设计}
+\include{tex/5_设计方案/2_硬件设计}
+\include{tex/5_设计方案/3_软件设计}
+\include{tex/5_设计方案/4_算法设计}
+ \include{tex/5_设计方案/5_定位与导航}
+\include{tex/5_设计方案/6_其它}
+
+\include{tex/6_研发迭代过程/1_测试记录}
+\include{tex/6_研发迭代过程/2_版本迭代过程记录}
+\include{tex/6_研发迭代过程/3_重点问题解决记录}
+\include{tex/7_团队成员贡献}
+
+\printbibliography
+\appendix
+
+
+
+\end{songti}
+\end{document}

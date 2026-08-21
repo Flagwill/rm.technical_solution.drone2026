@@ -1,0 +1,743 @@
+\section{软件设计}
+\subsection{概述}
+\lstinline{rm-controls}\cite{rmcontro94:online} 是一套在 PC 上运行的无下位机电控软件，基于 ros-control \cite{ros_control} 的硬件和仿真接口以及配套的控制器，用于开发 RoboMaster 机器人和高性能机器人。
+\subsubsection{极高的代码复用率}
+我们在设计代码架构时，极其注重代码复用性，将代码模块化并参数化，对于不同机器人只需要根据配置文件加载不同数量和种类的控制器。做到了\textbf{一套}代码给\textbf{所有}机器人同时使用，如：在开发好步兵的基础模块后，开发哨兵时，只需要编写配置\lstinline{.yaml}文件 ，除了决策层的开发，不需要书写或修改任何一行代码。 \figref {fig:deployed_robots_设计方案} 部署了 rm-controls 的机器人，我们在2022年 RMUL 均在全队的机器人中使用了 rm-controls。
+
+代码 \ref{code:sentry_gimbal} 为22赛季哨兵的云台配置文件，可以看到上下两个云台的配置文件结构相同，两个云台控制器被独立地动态地加载，然后分别获取两个控制器的参数，包括它要控制的关节名称，还有对外接口(以rostopic等形式)的名称。
+
+\begin{figure}[hbt!]
+    \centering
+    \subfigure[\#1 Hero]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/hero.jpg}
+    }
+    \subfigure[\#2 Engineer]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/engineer.jpg}
+    }
+    \subfigure[\#3 Standard (Mecanum)]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard3.jpg}
+    }
+    \subfigure[\#4 Standard (Swerve)]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard4.jpg}
+    }
+    \subfigure[\#5 Standard (Mecanum)]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard5.jpg}
+    }
+    \subfigure[\#6 Sentry]{
+        \centering
+        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/sentry.jpg}
+    }
+    \caption{部署了 rm-controls 的机器人 }
+    \label{fig:deployed_robots_设计方案}
+\end{figure}
+
+ \newpage
+ 
+\begin{lstlisting}[language=yaml, caption=哨兵上下云台部分配置, label={code:sentry_gimbal}]
+upper_gimbal_controller:
+    type: rm_gimbal_controllers/Controller
+    detection_topic: "/upper_detection"
+    camera_topic: "/upper_camera/camera_info"
+    yaw:
+      joint: "upper_yaw_joint"
+      pid: { p: 5.0, i: 0, d: 0.3, i_clamp_max: 0.0, i_clamp_min: -0.0, antiwindup: true}
+    pitch:
+      joint: "upper_pitch_joint"
+      pid: { p: 8.0, i: 50, d: 0.3, i_clamp_max: 0.1, i_clamp_min: -0.1, antiwindup: true}
+lower_gimbal_controller:
+    type: rm_gimbal_controllers/Controller
+    detection_topic: "/lower_detection"
+    camera_topic: "/lower_camera/camera_info"
+    yaw:
+      joint: "lower_yaw_joint"
+      pid: { p: 5.0, i: 0, d: 0.3, i_clamp_max: 0.0, i_clamp_min: -0.0, antiwindup: true}
+    pitch:
+      joint: "lower_pitch_joint"
+      pid: { p: 5.0, i: 100, d: 0.2, i_clamp_max: 0.4, i_clamp_min: -0.4, antiwindup: true}
+\end{lstlisting}
+
+
+\subsubsection{多刚体动力学仿真}
+所有机器人都能在Gazebo进行多刚体动力学仿真，且仿真和实车运行的代码不需要相互移植，是同一份代码甚至同一个二进制文件。除了发射控制器，其他模块和控制器在开发时均会在仿真中调试和测试，打断点时可以做到时间暂停，在机械组还没有加工装配好车时已经可以把代码测试好，完成参数的粗调，大大提高开发和迭代效率。如：2022赛季全向轮机器人在加工装配好后只花不到一天时间就测试调试完所有程序。 \figref {fig:gazebo_swerve_设计方案} 为全向机器人在RMUC场地中的仿真。
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/gazebo.jpg}
+    \caption{全向轮步兵机器人仿真}
+    \label{fig:gazebo_swerve_设计方案}
+\end{figure}
+
+除此之外我们还有真实的辊子仿真，如 \figref {fig:gazebo_swerve_设计方案}所示，麦轮与全向轮的每一个辊子在Gazebo中都有自己的坐标系与碰撞箱。
+
+\begin{figure}[hbt!]
+    \centering
+    \subfigure[麦轮棍子仿真\label{fig:麦轮棍子}]{
+        \centering
+        \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/mecanum_rolller.jpg}
+    }
+    \subfigure[全向轮棍子仿真\label{fig:全向轮棍子}]{
+        \centering
+        \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/omni_roller.jpg}
+    }
+    \caption{麦轮和全向轮棍子仿真 \label{fig:麦轮和全向轮棍子}}
+\end{figure}
+
+\subsubsection{良好的兼容性}
+硬件接口基于Linux的SocketCAN和sysfs，意味着可以在 Jetson AGX 和妙算等带有CAN总线的ARM设备上运行，同时我们还制作了USB转CAN设备，从而支持在任意x86平台上面运行，如：Intel NUC和队员的笔记本电脑，如 \figref {fig:pc_device_设计方案}。在RMUC中我们以Intel NUC为主，也被官方在2021年高中生暑期营中部署在妙算2上使用。
+
+\begin{figure}[hbt!]
+    \centering
+    \subfigure[Jetson AGX Xariver]{
+        \centering    \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/jetson_xavier.jpg}
+    }
+    \subfigure[Jetson AGX NX]{
+        \centering
+        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/jetson_nx.jpg}
+    }
+    \subfigure[DJI Manifold 2]{
+        \centering
+        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/dji_manifold.jpg}
+    }
+    \subfigure[Intel NUC]{
+        \centering
+        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/intel_nuc.jpg}
+    }
+    \caption{rm-controls 兼容的部分计算设备 }
+    \label{fig:pc_device_设计方案}
+\end{figure}
+
+\subsubsection{丰富的调试工具}
+依托ROS生态，可以使用多种可视化调试工具，对电机数据，计算结果和图像远程查看。还可以使用 dynamic\_reconfigure 进行动态调参。
+
+ \figref {fig:rqt_home_设计方案} 展示了我们搭建的调试界面，由rqt的支持，我们不需要编写代码就可以构建自己的调试图形界面。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.7\columnwidth]{figure/设计方案/软件设计/rqt_home.png}
+    \caption{rqt调试软件}
+    \label{fig:rqt_home_设计方案}
+\end{figure}
+
+ \subsubsection{自定义调试插件}
+ 除了官方为我们提供的一系列调试工具，依靠qt等平台的开发软件和一些接口，我们可以自定义自己的调试插件。下面是自定义插件的一个例子：
+ 
+ \figref {fig:rqt_home_虚拟DBUS} 展示了我们自定义的DBUS工具，该工具实现了和官方DBUS相近的功能。通过该插件我们可以在Gazebo虚拟环境中控制机器人，或者在没有DBUS时作为控制实车的替代。
+
+ \begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.5\columnwidth]{figure/设计方案/软件设计/rqt_virtual_dbus.png}
+    \caption{rqt虚拟DBUS}
+    \label{fig:rqt_home_虚拟DBUS}
+\end{figure}
+ 
+\subsection{系统架构}
+%系统的层级和各层功能，列举所使用的第三方中间件和模块，如RTOS、文件系统、日志系统、GUI、协议框架等。宿主机开发环境和调试环境。
+\subsubsection{系统层级与各层功能}
+程序由多个ROS package构成，其中有元包： \lstinline{rm_control} 提供了底层硬件和仿真的通用接口，元包 \lstinline{rm_controllers} 则为中间层各模块控制器，还有哨兵决策包 \lstinline{rm_fsm}和普通机器人操作包 \lstinline{rm_manual}。
+\begin{itemize}
+    \item rm\_control
+        \iitem rm\_msgs: 自定义的 ROS 话题消息、服务、动作
+        \iitem rm\_common: 常用函数、算法、裁判系统收发、ui
+        \iitem rm\_description: 所有机器人的 URDF，定义了：机器人各坐标系关系、电机与关节的映射、关节的限位、仿真需要的物理属性
+        \iitem rm\_hw: 同名节点通过 SocketCAN 与执行器进行通信获取数据并发送指令，在实车运行时提供硬件接口给控制器
+        \iitem rm\_gazebo: 同名Gazebo Plugin在仿真运行时提供硬件接口给控制器
+    \item rm\_controllers
+        \iitem rm\_chassis\_contorllers: 麦克纳姆轮、舵轮、平衡车的底盘控制器
+        \iitem rm\_gimbal\_controllers: 内置枪管角解算模型的云台控制器
+        \iitem rm\_shooter\_controllers: 操作摩擦轮，拨弹盘完成发射控制器的控制器
+        \iitem rm\_calibration\_controllers: 校准执行器位置的控制器 
+        \iitem robot\_state\_controller: robot\_state\_publisher\cite{robotsta13:online} 的高性能版，高频维护 tf
+    \item rm\_sentry: 哨兵机器人相关程序包
+        \iitem rm\_fsm: 哨兵机器人决策层包
+        \iitem rm\_localization: 哨兵机器人定位包
+        \iitem rm\_navigation: 哨兵机器人导航包
+    \item rm\_dbus: dbus数据接收节点
+    \item rm\_detection: 装甲板和能量机关视觉识别
+    \item rm\_stone: 矿石和障碍块视觉识别
+    \item rm\_track: 选择并预测目标的位置速度，并发送给云台控制器
+    \item rm\_manual: 普通机器人决策
+\end{itemize}
+
+\newpage
+
+ \figref {fig:standard_node}展示了哨兵机器人的ROS节点图，隐藏了不活动部分，并且没有显示ROS服务。它还有以下节点：
+
+\begin{itemize}
+    \item exposeurevalue\_seting: 设置相机曝光值
+    \item vision\_nodelet\_manager: 运行了所有视觉相关代码
+\end{itemize}
+\lstinline{rm_hw} 中运行的控制器有：
+\begin{itemize}
+    \item 状态控制器（发布器）
+    \iitem robot\_state\_controller (robot\_state\_controller/RobotStateController)
+    \iitem joint\_state\_controller (joint\_state\_controller/JointStateController)
+    \item 主控制器
+    \iitem chassis\_controller (rm\_chassis\_controllers/OmniController)
+    \iitem orientation\_controller (rm\_orientation\_controllers/Controller)
+    \iitem gimbal\_controller (rm\_gimbal\_controllers/Controller)
+    \iitem shooter\_controller (rm\_shooter\_controllers/Controller)
+    \item 校准控制器
+    \iitem trigger\_calibration\_controller (rm\_calibration\_controllers/JointCalibrationController)
+    \iitem gimbal\_calibration\_controller (rm\_calibration\_controllers/JointCalibrationController)
+\end{itemize}
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/rqt_graph.png}
+    \caption{哨兵机器人节点图}
+    \label{fig:standard_node}
+\end{figure}
+
+ \figref {fig:diagram_rm_controls_设计方案} 展示了上述包的工作方式。所有控制器由 \lstinline{ControllerManager} 管理，可以被初始化、开始、停止，并以 $\qty{1}{\kHz}$ 的频率更新，\lstinline{ControllerManager} 可以被加载运行在实车的 \lstinline{rm_hw} 节点或以Gazebo Plugin的形式加载进 \lstinline{gazebo} 节点。 
+控制器从 \lstinline{HardwareInterface} 获得各传感器和执行器的 handle，进行控制，同时通过ROS的话题、服务和动作接受其他节点的指令和发布自己的状态。相机驱动和视觉算法通过 \lstinline{nodelet}\cite{wikiroso20:online} 运行在同一个节点中并实现“零拷贝”。
+
+决策层通过串口读取裁判系统数据，并根据裁判系统数据和操作手指令通过话题、服务和动作对上述节点和第三方节点（如 \lstinline{move_base} 路径规划、\lstinline{moveit} 轨迹规划）进行操作。配置文件和数据由 \lstinline{rosparam} 加载到 ROS 参数服务器上，各节点都能查询获取。多种调试工具也通过ROS的话题、服务和动作进行交互。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/diagram_rm_controls.pdf}
+    \caption{rm-contorls 框架示意框图；浅蓝色代表一个Node（进程）；浅绿色代表类名或相关机制；浅黄色表示配置文件和数据；橙色为ROS通信中的话题、节点、动作；红色为实车。}
+    \label{fig:diagram_rm_controls_设计方案}
+\end{figure}
+
+\subsubsection{常用控制器}
+\paragraph{robot\_state\_controller 控制器}~{}
+\par
+robot\_state\_controllers 根据 URDF 和从 \lstinline{JointStateInterface}\ 获取到的关节位置计算机器人的正运动学然后将计算结果存入 robot\_state 中的 \lstinline{tf_buffer}并 以一定频率发布在话题 \lstinline{/tf} 上。\\
+\textbf{硬件接口}
+\begin{enumerate}
+    \item \lstinline{JointStateInterface} - 用于获取所有joint的位置
+    \item \lstinline{RoboSateInterface} - 用于维护 \lstinline{tf_buffer}
+\end{enumerate}
+\textbf{订阅话题}
+\begin{enumerate}
+    \item  \lstinline{/tf} (tf/tfMessage)\\
+    ROS tf 机制的默认话题接口
+\end{enumerate}
+\textbf{发布话题}
+\begin{enumerate}
+    \item  \lstinline{/tf} (tf/tfMessage)\\
+    ROS tf 机制的默认话题接口
+\end{enumerate}
+
+\paragraph{rm\_chassis\_controllers 控制器}~{}
+\par
+rm\_chassis\_controllers有 \lstinline{RAW}、\lstinline{FOLLOW} 和 \lstinline{TWIST} 三种状态，它根据速度与加速度指令计算通过逆运动学出底盘各个电机的转速，经过PID控制器或LQR控制器得到各电机扭矩，并进行功率限制；还能通过电机返回数据通过正运动学解算底盘里程计并发布。\\
+\textbf{硬件接口}
+\begin{enumerate}
+    \item \lstinline{JointStateInterface} - 用于获取底盘 joint 的位置和速度
+    \item \lstinline{EffortJointInterface} - 用于发送底盘 joint 的扭矩指令
+    \item \lstinline{RoboSateInterface} - 用于高频维护 \lstinline{odom -> base_link} 的变换关系。
+
+\end{enumerate}
+\textbf{订阅话题}
+\begin{enumerate}
+    \item \lstinline{/controllers/chassis_controller/command} (rm\_msgs/ChassisCmd)\\
+    设定底盘的模式、加速度、最大功率。
+    \item \lstinline{/cmd_vel} (geometry\_msgs/Twist)\\
+    设定底盘的速度。
+\end{enumerate}
+\textbf{发布话题}
+\begin{enumerate}
+    \item  \lstinline{/odom} (nav\_msgs/Odometry.msg)\\
+    底盘里程计信息（速度、位置、协方差）
+\end{enumerate}
+
+\paragraph{rm\_gimbal\_controllers 控制器}~{}
+\par
+rm\_gimbal\_controllers 有\lstinline{RATE}、\lstinline{TRACK}、\lstinline{DIRECT} 三种状态，它根据命令对Yaw和Pitch两个joint进行 PID 控制，还能获取视觉目标数据使用子弹发射模型解算、预测和跟踪目标。\\
+\textbf{硬件接口}
+\begin{enumerate}
+    \item \lstinline{JointStateInterface} - 用于获取云台 joint 的位置和速度
+    \item \lstinline{EffortJointInterface} - 用于发送云台 joint 的扭矩指令
+    \item \lstinline{RoboSateInterface} - 用于获取云台和视觉目标与世界坐标系在当前和历史的变换关系
+\end{enumerate}
+\textbf{订阅话题}
+\begin{enumerate}
+    \item \lstinline{/controllers/gimbal_controller/command} (rm\_msgs/GimbalCmd)\\
+    设定云台的模式、Pitch和Yaw轴转速、跟踪目标、指向目标及坐标系。
+    \item \lstinline{/track} (rm\_msgs/TrackCmd)\\
+    接收视觉识别数据。
+\end{enumerate}
+\textbf{发布话题}
+\begin{enumerate}
+    \item  \lstinline{/controllers/gimbal_controller/error} (rm\_msgs/GimbalError)\\
+    子弹模型计算的以当前云台角度射击对目标的距离误差
+\end{enumerate}
+
+\paragraph{rm\_shooter\_controllers 控制器}~{}
+\par
+rm\_shooter\_controller 有 \lstinline{STOP}、\lstinline{READY}、\lstinline{PUSH}、\lstinline{BLOCK} 四种状态，它根据命令通过 PID 控制左右摩擦轮转速和拨弹盘的位置从而发射弹丸同时还实现了卡弹检测及解除卡弹。\\
+\textbf{硬件接口}
+\begin{enumerate}
+    \item \lstinline{JointStateInterface} - 用于获取摩擦轮、拨弹盘的速度和拨弹盘的位置
+    \item \lstinline{EffortJointInterface} - 用于发送摩擦轮和拨弹盘的扭矩指令\end{enumerate}
+\textbf{订阅话题}
+\begin{enumerate}
+    \item \lstinline{/controllers/shooter_controller/command} (rm\_msgs/ShootCmd):
+    设定控制器状态、子弹速度、射击频率。
+\end{enumerate}
+
+\paragraph{rm\_calibration\_controller 控制器}~{}
+\par
+由于部分电机断电后零点会发生改变，rm\_calibration\_controller启动后将按一定速度运动直到卡到机械限位，对电机位置进行归零。\\
+\textbf{硬件接口}
+\begin{enumerate}
+    \item \lstinline{EffortJointInterface} -  根据获得的校准速度，给目标关节发布一个达到该校准速度所要用的作用力指令。
+    \item \lstinline{ActuatorExtraInterface} - 用于获取目标执行器的基准点，当前位置，是否已经校准成功状态，是否停止状态的信息。
+\end{enumerate}
+\textbf{提供服务}
+\begin{enumerate}
+    \item \lstinline{is_calibrated} (control\_msgs/QueryCalibrationState)\\
+    当向此服务发出一个请求时，此服务会返回校准目标是否成功校准。
+\end{enumerate}
+
+\paragraph{控制器配置文件}~{}
+\par
+代码 \ref{code:sentry_config}展示了哨兵机器人的所有控制器的配置文件。将此配置文件里的参数加载到参数服务器上后，各个控制器可以各自从参数服务器上获取自己想要的参数。因参数过多，不做一一讲解。其中可以看到云台电机，拨盘电机，弹仓盖电机的校准控制器拥有相同结构的参数配置。三个校准控制器是同一份代码，被独立地动态加载，分别获取需要校准的电机，对应的joint等信息。
+\begin{lstlisting}[language=yaml, caption=哨兵控制器配置, label={code:sentry_config}]
+controllers:
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+  robot_state_controller:
+    type: robot_state_controller/RobotStateController
+    publish_rate: 100
+
+  gimbal_calibration_controller:
+    type: rm_calibration_controllers/JointCalibrationController
+    joint: pitch_joint
+    actuator: [ pitch_joint_motor ]
+    search_velocity: 6.28
+    threshold: 1e-2
+    pid: { p: 0.3, i: 0, d: 0.0, i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true }
+  trigger_calibration_controller:
+    type: rm_calibration_controllers/JointCalibrationController
+    joint: trigger_joint
+    actuator: [ trigger_joint_motor ]
+    search_velocity: 3.1415
+    threshold: 0.2
+    pid: { p: 0.3, i: 0, d: 0.0, i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true }
+  barrel_calibration_controller:
+    type: rm_calibration_controllers/JointCalibrationController
+    joint: barrel_joint
+    actuator: [ barrel_joint_motor ]
+    search_velocity: -4
+    threshold: 1e-2
+    pid: { p: 1.0, i: 0, d: 0.0, i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true }
+
+  chassis_controller:
+    type: rm_chassis_controllers/OmniController
+    # ChassisBase
+    publish_rate: 100
+    enable_odom_tf: true
+    publish_odom_tf: true
+    power:
+      effort_coeff: 10.0
+      vel_coeff: 0.0060
+      power_offset: -8.41
+    twist_angular: 0.5233
+    timeout: 0.1
+    pid_follow: { p: 5.0, i: 0, d: 0.3, i_max: 0.0, i_min: 0.0, antiwindup: true, publish_state: true }
+    twist_covariance_diagonal: [ 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 ]
+
+    # OmniController
+    wheels:
+      left_front:
+        pose: [ 0.147, 0.147, 2.356 ]
+        joint: left_front_wheel_joint
+        <<: &wheel_setting
+          roller_angle: 0.
+          radius: 0.07625
+          pid: { p: 0.41, i: 0, d: 0.0, i_max: 0.0, i_min: 0.0, antiwindup: true, publish_state: true }
+      right_front:
+        pose: [ 0.147, -0.147, 0.785 ]
+        joint: right_front_wheel_joint
+        <<: *wheel_setting
+      left_back:
+        pose: [ -0.147, 0.147, -2.356 ]
+        joint: left_back_wheel_joint
+        <<: *wheel_setting
+      right_back:
+        pose: [ -0.147, -0.147, -0.785 ]
+        joint: right_back_wheel_joint
+        <<: *wheel_setting
+
+  orientation_controller:
+    type: rm_orientation_controller/Controller
+    publish_rate: 100
+    name: "gimbal_imu"
+    frame_source: "odom"
+    frame_target: "base_link"
+
+  gimbal_controller:
+    type: rm_gimbal_controllers/Controller
+    yaw:
+      joint: "yaw_joint"
+      pid: { p: 7.5, i: 0, d: 0.3, i_clamp_max: 0.3, i_clamp_min: -0.3, antiwindup: true, publish_state: true }
+      k_chassis_vel: 0.01
+    pitch:
+      joint: "pitch_joint"
+      pid: { p: 22.0, i: 0, d: 0.75, i_clamp_max: 0, i_clamp_min: 0, antiwindup: true, publish_state: true }
+    chassis_vel:
+      num_data: 20
+      debug: true
+    imu_name: "gimbal_imu"
+    feedforward:
+      gravity: 0.0
+      enable_gravity_compensation: false
+      mass_origin: [ 0.0,0.0,0.0 ]
+    bullet_solver:
+      resistance_coff_qd_10: 0.45
+      resistance_coff_qd_15: 1.0
+      resistance_coff_qd_16: 0.7
+      resistance_coff_qd_18: 0.55
+      resistance_coff_qd_30: 5.0
+      g: 9.81
+      delay: 0.15
+      dt: 0.001
+      timeout: 0.001
+      publish_rate: 50
+
+  shooter_controller:
+    type: rm_shooter_controllers/Controller
+    publish_rate: 50
+    friction_left:
+      joint: "left_friction_wheel_joint"
+      pid: { p: 0.0007, i: 0.005, d: 0.0, i_clamp_max: 0.01, i_clamp_min: -0.01, antiwindup: true, publish_state: true }
+    friction_right:
+      joint: "right_friction_wheel_joint"
+      pid: { p: 0.0007, i: 0.005, d: 0.0, i_clamp_max: 0.01, i_clamp_min: -0.01, antiwindup: true, publish_state: true }
+    trigger:
+      joint: "trigger_joint"
+      pid: { p: 34.0, i: 0.0, d: 1.3, i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+    push_per_rotation: 9
+    push_qd_threshold: 0.90
+    block_effort: 2.8
+    block_speed: 0.1
+    block_duration: 0.05
+    block_overtime: 0.5
+    anti_block_angle: 0.2
+    anti_block_threshold: 0.1
+    forward_push_threshold: 0.23
+    exit_push_threshold: 0.25
+    qd_15: 470.0
+    qd_18: 545.0
+    qd_30: 740.0
+\end{lstlisting}
+
+\subsection{运行流程}
+%软件整体的运行流程、数据流向和处理过程。
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/ros_control.png}
+    \caption{ros-control框图，图源\cite{roscontr63:online}}
+    \label{fig:ros-control_设计方案}
+\end{figure}
+
+如 \figref {fig:ros-control_设计方案}所示，ros-control 提供这样的机制： 执行器（Actuator）的编码器等传感器数据被读取后通过 TransmissionsInterface（详见\ref{transmission}）映射成关节 （Joint） 等机器人状态，将这些状态接口（详见\ref{hardwareinterface}）提供给控制器；经过控制器计算后得到关节指令经过限制，再映射为电机的指令，发送给电机。控制器管理器可以实时加载、开始和停止各种控制器（以动态库的形式编译）。
+
+
+rm-control和rm-controllers是基于ros-control开发的，它们的运行流程可分为三步：1、硬件层（底层）读取执行器的编码器等传感器数据，并映射成关节将数据传递给控制器；2、控制器计算出关节的力矩指令，并传回给硬件层；3、硬件层将关节指令再次映射为电机指令，并将指令发送出去。以上三步构成一个控制循环，并以$\qty{1}{\kHz}$的频率循环运行。
+
+其他的ROS软件包是并行运行的，没有特定的先后流程顺序。
+
+
+
+\subsubsection{硬件接口} \label{hardwareinterface}
+提供给控制器常见硬件接口
+\begin{itemize}
+    \item Joint Command Interface - 关节指令发送接口
+    \begin{itemize}
+        \item Effort Joint Interface - 用于向指令是力矩/力的执行器 (如: RoboMaster 3508) 对应的关节发送指令
+        \item Velocity Joint Interface  - 用于向指令是速度执行器 (如: 部分舵机) 对应的关节
+        \item Position Joint Interface  - 用于向指令是位置执行器 (如: 大部分舵机) 对应的关节
+    \end{itemize}
+    \item Joint State Interfaces - 关节状态获取接口，用于获取关节的位置、速度和作用力（力或扭矩）
+    \item Actuator State Interfaces - 执行器状态获取接口，用于获取执行器的位置、速度和作用力（力或扭矩）
+    \item Actuator Command Interfaces - 执行器指令发送接口，和关节指令接口类似
+    \item Force-torque sensor Interface - 力-力矩传感器接口
+    \item IMU sensor Interface - IMU 传感器接口
+\end{itemize}
+
+\subsubsection{Transmissions} \label{transmission}
+Transmissions 是实际机器人执行器于关节的状态和指令映射，有简单减速比（改变正负可以将电机反向）、差速器（常见于机械臂末端两个关节）、双执行器（两个电机带动一个关节）。 \figref {fig:trans_diff} 展示了差分Transmissions的简图和计算方法。
+
+下列代码为哨兵机器人URDF中云台 Pitch轴执行器 \lstinline{pitch_joint_motor} 与云台 Pitch 关节 \lstinline{pitch_joint}  transmission，由于 Pitch轴是M3508电机驱动，减速比为11，又实际电机转向于关节定义的转向相反，取减速比为-11，在校准时实测得偏移为 $\qty{0.61}{\radian}$。有了这一个的映射，云台控制器只使用关节状态不需要考虑不同机器人电机安装位置、方向和初始值。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/transmission.png}
+    \caption{差分Transmissions，图源\cite{transmis19:online}}
+    \label{fig:trans_diff}
+\end{figure}
+
+\begin{lstlisting}[language=xml, caption=pitch轴 transmission ]
+<transmission name="trans_pitch_joint">
+    <type>transmission_interface/SimpleTransmission</type>
+    <actuator name="pitch_joint_motor">
+        <mechanicalReduction>-11</mechanicalReduction>
+    </actuator>
+    <joint name="pitch_joint">
+        <offset>0.61</offset>
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+</transmission>
+\end{lstlisting}
+
+
+
+\subsection{重点功能}
+%核心功能点描述，解决了何种问题，使用了何种技术。
+
+\subsubsection{Gazebo 仿真}
+得益于ros\_control的机制，控制器可以被加载到硬件接口上，也可以被加载到Gazebo模拟器中, 如 \figref {fig:gazebo}。值得一提的是实车硬件和仿真用的控制器都是同一份代码，不存在移植或重新编译的过程，甚至使用的是同一个二进制文件（由服务器CI编译测试并发布到apt源并安装）。这帮助我们在机械装配时，可以先提前测试程序，在机械组装配完成机器人后，只需要根据实车测试更改部分参数，而不需要更改任何代码，提高了开发效率。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/ros_control+gazebo.png}
+    \caption{Gazbeo + ROS + ros\_control 简图，图源\cite{GazeboTu75:online}}
+    \label{fig:gazebo}
+\end{figure}
+
+\subsubsection{软限位}
+软限位从软件上限制关节的运动范围，为了使关节到达硬限位之前对关节进行限制，避免关节频繁撞击硬限位导致硬件损坏。其具体的实现方式是在接近软限位时，采用串级P控制器，先通过改变力矩对速度进行限制，再通过改变速度来限制位置。
+
+当关节位置接近软上限时，\lstinline{safety_controller}改变其所在关节最大输出力矩的上下限，实际上就是对输出力矩采用P控制器，以此来对该关节最大速度进行限制。关节最大速度则限制了关节的运动范围，这一步等价于对输出速度采用P控制器，再将其串起来变成串级P控制器。具体参见 \figref {fig:soft_limit_设计方案}。其中，\lstinline{safety_length_min}是软下限位置，它的取值是硬件上限减去一个较小的偏移量，\lstinline{safety_length_max}是软上限位置，它的取值是硬件上限加上一个较小的偏移量。\lstinline{k_velocity}决定了力矩界限的尺度，\lstinline{k_position}决定了速度界限的尺度。
+
+\begin{figure}[hbt!]
+    \centering
+    \subfigure[力矩限制]{
+        \centering
+        \includegraphics[width=0.35\columnwidth]{figure/设计方案/软件设计/effort_limit.png}
+    }
+    \subfigure[速度限制]{
+        \centering
+        \includegraphics[width=0.35\columnwidth]{figure/设计方案/软件设计/velocity_limit.png}
+    }
+    \caption{软限位的限制方式，图源\cite{pr2contr64:online}}
+    \label{fig:soft_limit_设计方案}
+\end{figure}
+
+下列代码为步兵机器人URDF中云台Pitch轴的软限位设置，其中有三个参数，\lstinline{threshold} 是软限位与硬限位之间的差值，\lstinline{pitch_lower_limit} 是硬限位最小值，\lstinline{pitch_upper_limit} 是硬限位最大值。\lstinline{k_position} 和 \lstinline{k_velocity} 需要根据执行器属性及实际需要设置，\lstinline{soft_lower_limit} 是软限位的最小值，按照上述说明，它应该等于 \lstinline{pitch_lower_limit+threshold}，使Pitch轴触碰到硬限位之前启用软限位。同理，\lstinline{soft_upper_limit} 是软限位的最大值，它应该等于 \lstinline{pitch_lower_limit-threshold}。
+\begin{lstlisting}[language=xml, caption=pitch轴软限位]
+<xacro:property name="threshold" value="0.1"/>
+<xacro:property name="pitch_lower_limit" value="-0.71"/>
+<xacro:property name="pitch_upper_limit" value="0.45"/>
+<safety_controller k_position="100" k_velocity="0.1"
+                   soft_lower_limit="${pitch_lower_limit+threshold}"
+                   soft_upper_limit="${pitch_upper_limit-threshold}"/>
+\end{lstlisting}
+
+
+\subsubsection{枪口热量限制}
+枪口热量限制通过限制子弹发射频率来控制枪管热量，以达到不会因超热量而扣血的目的。我们采用的限制方案是当枪口剩余热量高于某个阈值时，发射频率为期望射频;当枪口剩余热量低于某个阈值时，令发射频率随着枪口实际热量的增大而线性减小;当枪口剩余热量等于一颗子弹的热量时，令发射频率为安全射频（在安全射频下，枪口热量几乎保持稳定）;当枪口剩余热量小于一颗子弹的热量时，令发射频率为零。参见 \figref {fig:heat_limit_设计方案}。其中，x表示当前枪口热量，a表示枪口热量上限，b表示一颗子弹的热量，c表示枪口热量冷却速度，d表示热量限制的阈值，e表示期望的发射频率，y表示实际的发射频率。
+
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/heat_limit.pdf}
+    \caption{枪口热量限制方案}
+    \label{fig:heat_limit_设计方案}
+\end{figure}
+
+
+\subsubsection{软件底盘功率限制}
+软件功率限制通过限制电机输出力矩来控制底盘功率，以达到在底盘剧烈运动、实际功率即将超过给定的最大功率时，将实际功率限制到最大功率附近以下的目的。
+\paragraph{理论}~\\
+电机的输出功率为：
+\begin{equation}
+    P_\textrm{out} = \tau \omega
+    \label{eq:p_out}
+\end{equation}
+电机的输入功率为输出功率和损失功率的和，可表示为：
+\begin{equation}
+    P_\textrm{in} = P_\textrm{out} + k_1 \tau^2 + k_2 \omega^2
+    \label{eq:p_in}
+\end{equation}
+其中 $k_1$ 和 $k_2$ 为常数。
+\paragraph{实现}~\\
+我们根据\ref{eq:p_in}来实现功率限制。已知：最大功率 $P_\textrm{max}$、各电机当前转速 $\omega_\textrm{real}$ 和电机 PID 计算出来的原始力矩指令 $\tau_\textrm{cmd}$ 。当 $\tau_\textrm{cmd}$ 将使 $P_{in}$ 高于 $P_\textrm{max}$ 时，设有一缩放系数$k$，令 $\tau_\textrm{cmd}' = k\tau_\textrm{cmd}$, 使得 $\tau_\textrm{cmd}'$ 满足：
+\begin{equation}
+P_\textrm{max} = \sum \lvert \omega_\textrm{real}\tau_\textrm{cmd'} \rvert + k_1\sum\tau_\textrm{cmd}'^2 + k_2\sum\omega_\textrm{real}^2
+\label{eq:p_max}
+\end{equation}
+
+由 $\tau_\textrm{cmd}' = k\tau_\textrm{cmd}$与\eqref{eq:p_max}整理可得关于缩放系数$k$的一元二次方程:
+\begin{equation}
+     (k_1\sum\tau_\textrm{cmd}^2)k^2 + ( \sum \lvert \omega_\textrm{real}\tau_\textrm{cmd} \rvert)k+((k_2\sum\omega_\textrm{real}^2-P_\textrm{max}) = 0
+\end{equation}
+
+则可由上式计算出 k 的值：
+\begin{equation}
+k = \frac{-\sum \lvert \omega_\textrm{real}\tau_\textrm{cmd} \rvert + \sqrt{\sum(\omega_\textrm{real}\tau_\textrm{cmd})^2 - 4k_1(\sum\tau_\textrm{cmd}^2)(k_2\sum\omega_\textrm{real}^2-P_\textrm{max})}} {2k_1\sum\tau_\textrm{cmd}^2}
+\end{equation}
+最终给电机的力矩指令即为 $\tau_\textrm{cmd}' = k\tau_\textrm{cmd}$。
+ \figref {fig:power_limit}展示了步兵机器人在 静止状态下进入高速小陀螺后再进入慢速小陀螺最后在高速小陀螺状态下进行平移的功率（最上）、速度指令（中间）和实际速度（最下）的曲线，可见在高速小陀螺状态下，功率被限制在了红线附近之下，实际速度比速度指令小，进入慢速小陀螺后，功率降低，此时实际速度与速度指令相等，最后在高速小陀螺状态下平移时，功率依然被限制在了青色线(最大功率)附近以下。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/power_limit.png}
+    \caption{底盘功率限制效果}
+    \label{fig:power_limit}
+\end{figure}
+
+\subsubsection{状态机}
+\paragraph{决策过程}~\\
+如\figref{fig:decision}所示哨兵具有四个状态，分别为：手动，巡航，打击；手动状态为了方便调试而开发，和步兵一样能够使用遥控器控制底盘以及云台，同时可以通过遥控器上的拨杆切换到巡航状态，在巡航状态中，哨兵会随机选取提前预设的其中一个目标点进行路径规划，到达目标点之后自行切换到下一个目标点，同时云台 Yaw 轴和 Pitch 轴会在预设的限位中来回运动用以方便哨兵迅速全方位的扫描障碍以及识别敌方装甲板，在收到裁判系统发送的装甲板受击信息后，哨兵底盘会开始小陀螺，同时云台看向受击打方向；当哨兵识别到敌方装甲板后，哨兵会进入打击状态，底盘小陀螺，云台跟随敌方装甲板同时开始转动拨盘。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.65\columnwidth]{figure/设计方案/软件设计/决策流程图.png}
+    \caption{决策流程图}
+    \label{fig:decision}
+\end{figure}
+
+
+
+\paragraph{裁判系统信息辅助决策}~{}
+\par
+在哨兵的决策中，裁判系统的信息也起到非常重要的作用，分别有以下应用场景：
+\begin{itemize}
+    \item 在收到比赛开始的信息后，哨兵会从空闲状态切换到巡航状态；
+    \item 在收到装甲板受击的信息之后，哨兵会停止前往目标点，转为小陀螺同时云台巡航寻找敌人；
+    \item 在收到云台手发送的目标点信息后，哨兵会取消当前目标点的路径规划，转为对云台手发来的目标点进行规划；
+    \item 在处于无敌状态时，收到队友受击扣血的信息后，哨兵会将队友所在位置设为目标点位，增援队友；
+    \item 在哨兵定位发生人眼可见的严重偏移时，哨兵停止运动并根据雷达机器人发送的位置信息修正哨兵在地图中的位置；
+    \item 云台手可通过裁判系统让哨兵处于切换用于巡航的目标点组，分别为在我方半场附近的目标点，以及靠近前线以及对方半场的目标点，调整哨兵为保守或是进攻策略；
+\end{itemize}
+
+
+\subsubsection{相机图像与IMU数据时间戳同步}
+相机图像与IMU数据时间戳同步的意义在于消除云台快速运动时目标在世界坐标系位姿的剧烈抖动。IMU数据用于估计云台和相机在世界坐标系的姿态，配合其他坐标系变换信息得到准确位姿。如果两者不同步，就意味着相机坐标系到世界坐标系的转换关系，和相机坐标系到目标坐标系的转换关系不同步。那么目标在世界坐标系的位姿的准确性也无从谈起。在云台快速运动时表现为位姿发生抖动。
+
+为了使相机图像与IMT数据时间戳同步，我们采用的方案是：IMU向相机发送触发信号。当相机收到触发信号时，采集图像并传输给Mini PC。同时IMU在触发相机时通过CAN总线告知Mini PC已触发相机这一信息，程序收到这一信息后，会将收到这一信息时的时间戳认为是IMU数据与相机图像的采集时间，并将触发相机时的触发时间与IMU姿态发布出去。相机驱动节点内部有一个FIFO队列缓存收到的触发时间，并在收到一帧图像后从队列中取出一个触发时间将其作为图像的时间戳并将图像发布出去。流程图如\figref{fig:imu_camera_sync}所示。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/imu与相机硬件同步.png}
+    \caption{imu与相机硬件同步方案}
+    \label{fig:imu_camera_sync}
+\end{figure}
+
+\subsubsection{卡尔曼滤波预测目标位置}
+我们建立了装甲板在世界坐标系匀速直线运动的状态模型和量测模型，使用卡尔曼滤波对目标装甲板在世界坐标系的位置和速度进行最优估计，并进行预测。状态量如下：
+\begin{equation}
+x={
+\left[ \begin{array}{cccccc}
+x_n & \dot x_n & y_n & \dot y_n & z_n & \dot z_n
+\end{array} 
+\right ]}^T
+\end{equation}
+$x_n$、$y_n$、$z_n$为目标在世界坐标系的坐标，$\dot x_n$、$\dot y_n$、$\dot z_n$为目标在世界坐标系的速度。
+过程模型如\eqref{eq:kalman_process_model}所示：
+\begin{equation}
+\boldsymbol{x}_{k+1}=\boldsymbol{F}_{k} \boldsymbol{x}_{k}+\boldsymbol{\Gamma}_{k} \boldsymbol{w}_{k}, \quad \boldsymbol{w}_{k} \sim N\left(\mathbf{0}_{3 \times 1}, \boldsymbol{Q}_{k}\right)
+\label{eq:kalman_process_model}
+\end{equation}
+其中：
+\begin{equation}
+\begin{aligned}
+\boldsymbol{F}_{k} &=\left[\begin{array}{cccccc}
+1 & \Delta t & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 1 & \Delta t & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 & 1 & \Delta t \\
+0 & 0 & 0 & 0 & 0 & 1
+\end{array}\right] \\
+\boldsymbol{\Gamma}_{k} &=\left[\begin{array}{cccc}
+\frac{1}{2}\Delta t ^{2} & 0 & 0 \\
+\Delta t & 0 & 0 \\
+0 & \frac{1}{2} \Delta t ^{2} & 0 \\
+0 & \Delta t \ & 0  \\
+0 & 0 & \frac{1}{2} \Delta t ^{2} \\
+0 & 0 & \Delta t \
+\end{array}\right]
+\end{aligned}
+\end{equation}
+
+量测模型为：
+\begin{equation}
+\boldsymbol{z}_{k}=\boldsymbol{H}_{k} \boldsymbol{x}_{k}+\boldsymbol{v}_{k}
+\end{equation}
+采用${r}_{n}=\left[x_{n}, y_{n}, z_{n}\right]^{T}$作为量测向量，则：
+
+\begin{equation}
+\boldsymbol{H}_{k}=\left[\begin{array}{cccccc}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0
+\end{array}\right], \boldsymbol{v}_{k} \sim N\left(\mathbf{0}_{3 \times 1}, \boldsymbol{R}_{k}\right)
+\end{equation}
+
+卡尔曼滤波器在RM的运用已经非常成熟\cite{kalman_filter}。
+\subsection{软件测试}
+%测试方案简介、测试执行情况和结果。
+\subsubsection{持续集成与持续部署}
+
+如 \figref {fig:持续集成与持续部署流程}所示我们将大部分代码放在github托管，并借助 GitHub Actions 对代码进行持续集成（CI）。开发人员每次将代码推送到远程仓库后，Github Actions 会自动化运行若干个单元测试。如果自动化测试发现新代码和现有代码之间存在冲突，CI 可以更加轻松地快速修复这些错误。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.5\columnwidth]{figure/设计方案/软件设计/CI&CD.png}
+    \caption{持续集成与持续部署流程}
+    \label{fig:持续集成与持续部署流程}
+\end{figure}
+
+\clearpage
+
+GitHub Actions 有以下这些：
+\begin{itemize}
+    \item CI - 相关单元测试
+    \item Doxygen-docs 生成api文档页面并发布
+    \item Format - 检查代码格式
+    \item bloom-release - 在推新tag时自动把新版本信息和打包文件扔给官方源
+    \item deb-package - 自动打包deb
+\end{itemize}
+
+我们还自行搭建了软件源，在CI通过之后，会自动将最新代码发布到软件源。当在某台机器人上开发稳定之后，其他机器人可以使用安装或升级的方式获得最新功能的软件。这就是持续部署。除了在每次推送代码都会运行的CI以外，我们还创建了名为rm\_ci的软件包，它会在固定的时间自动运行一系列的单元测试对我们的代码进行功能性测试，便于发现代码里在功能上出现的问题。
+
+\figref {fig:ci_设计方案}展示了借助 GitHub Actions 对代码进行持续集成。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/ci.png}
+    \caption{借助 GitHub Actions 进行持续集成}
+    \label{fig:ci_设计方案}
+\end{figure}
+
+以下展示使用两行指令完成底盘控制器的安装或更新。
+\begin{lstlisting}[language=xml, caption=在机器人上更新软件, label={command:software_update}]
+sudo apt update
+sudo apt install ros-noetic-rm-chassis-controllers
+\end{lstlisting}
+
+
+ \figref {fig:rostest_设计方案}为rm\_ci运行某个单元测试后测试通过的结果。
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/rostest.png}
+    \caption{单元测试运行结果}
+    \label{fig:rostest_设计方案}
+\end{figure}    
+
+
+\subsubsection{自瞄解耦测试}
+击打移动装甲板这一工作可以主要分为装甲板识别以及装甲板位置预测这两个部分，在上赛季的开发中，装甲板位置预测的程序需要等到装甲板识别稳定后才能开始测试，并且当击打移动装甲板的命中率低时，我们需要花较多的时间去找是识别的问题还是预测的问题。以上两个问题都使得开发效率低下。
+
+在这一赛季中，我们使用AprilTag代替装甲板进行识别，用以测试除识别以外的包括筛选、拓展卡尔曼滤波预测目标位置等其他功能。我们使用第三方的包对AprilTag进行识别，识别准确。这使得我们能够将装甲板识别算法的开发与预测算法的开发解耦，使二者的开发与测试可以同时进行，并且在出现问题时能够及时定位问题所在，极大地提高了我们的开发效率。
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/detect_apriltag.jpg}
+    \caption{识别并跟踪AprilTag}
+    \label{fig:detect_apriltag}
+\end{figure}
+
+\clearpage
