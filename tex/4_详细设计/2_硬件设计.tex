@@ -2,7 +2,7 @@
 %硬件各模块的连接框图（visio）、标注通信标准、融合电源树说明。
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=1\columnwidth]{figure/设计方案/硬件设计/hardware_wiring.pdf}
+    \includegraphics[width=1\columnwidth]{figure/4_详细设计/硬件设计/hardware_wiring.pdf}
     \caption{整体硬件框图}        
     \label{fig:hardware_wiring_设计方案}
 \end{figure}
@@ -14,7 +14,7 @@
 \subsection{超级电容}
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=1\columnwidth]{figure/设计方案/硬件设计/超级电容拓扑图.jpg}
+    \includegraphics[width=1\columnwidth]{figure/4_详细设计/硬件设计/超级电容拓扑图.jpg}
     \caption{超级电容拓扑图}        
     \label{fig:super_capacitor_设计方案}
 \end{figure}
@@ -33,7 +33,7 @@
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/硬件设计/Topology_Sucap_Bridging.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/硬件设计/Topology_Sucap_Bridging.png}
     \caption{桥接后的拓扑结构}
     \label{fig:powermanager_bridging_typo}
 \end{figure}
@@ -43,7 +43,7 @@
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/硬件设计/Sucap_Controller_Memory.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/硬件设计/Sucap_Controller_Memory.png}
     \caption{STM32内存空间分配}
     \label{fig:sucap_controller_memory}
 \end{figure}
@@ -62,11 +62,11 @@
     \centering
     \subfigure[超级电容单体保护电路原理图 \label{fig:sucap_single}]{
         \centering
-        \includegraphics[width=0.48\columnwidth]{figure/设计方案/硬件设计/Sucap_Single.png}
+        \includegraphics[width=0.48\columnwidth]{figure/4_详细设计/硬件设计/Sucap_Single.png}
     }
     \subfigure[充电电流采样电路原理图 \label{fig:charge_current_sample}]{
         \centering
-        \includegraphics[width=0.44\columnwidth]{figure/设计方案/硬件设计/Charge_Current_Sample.png}
+        \includegraphics[width=0.44\columnwidth]{figure/4_详细设计/硬件设计/Charge_Current_Sample.png}
     }
     \caption{部分原理图展示 \label{fig:charge_capacitor_sch}}
 \end{figure}
@@ -87,7 +87,7 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/硬件设计/Charge_Circuit_Schematic.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/硬件设计/Charge_Circuit_Schematic.png}
     \caption{充电模块原理图}
     \label{fig:charge_circuit_schematic}
 \end{figure}
@@ -101,13 +101,13 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
     \subfigure[使用BTS443P作为高侧开关 \label{fig:high_side_switch_pmos}]{
         \begin{minipage}[t]{0.45\linewidth}
         \centering
-        \includegraphics[width=0.7\columnwidth]{figure/设计方案/硬件设计/BTS443P_Switch.png}
+        \includegraphics[width=0.7\columnwidth]{figure/4_详细设计/硬件设计/BTS443P_Switch.png}
         \end{minipage}
     }
     \subfigure[使用BTS443P作为高侧开关 \label{fig:high_side_switch_bts443p}]{
         \begin{minipage}[t]{0.45\linewidth}
         \centering
-        \includegraphics[width=0.7\columnwidth]{figure/设计方案/硬件设计/HighSideSwitch-LM5060.png}
+        \includegraphics[width=0.7\columnwidth]{figure/4_详细设计/硬件设计/HighSideSwitch-LM5060.png}
         \end{minipage}
     }
     \caption{高侧开关原理图 \label{fig:high_side_switch_sch}}
@@ -123,19 +123,19 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
     \centering
     \subfigure[无浪涌吸收刹车 \label{fig:no_surge_absorbing_brake}]{
         \centering
-        \includegraphics[width=0.23\columnwidth]{figure/设计方案/硬件设计/No_Surge_Absorbing_Brake.png}
+        \includegraphics[width=0.23\columnwidth]{figure/4_详细设计/硬件设计/No_Surge_Absorbing_Brake.png}
     }
     \subfigure[有浪涌吸收刹车 \label{fig:have_surge_absorbing_brake}]{
         \centering
-        \includegraphics[width=0.23\columnwidth]{figure/设计方案/硬件设计/Have_Surge_Absorbing_Brake.png}
+        \includegraphics[width=0.23\columnwidth]{figure/4_详细设计/硬件设计/Have_Surge_Absorbing_Brake.png}
     }
     \subfigure[有浪涌吸收正反切 \label{fig:no_surge_absorbing_switch}]{
         \centering
-        \includegraphics[width=0.23\columnwidth]{figure/设计方案/硬件设计/No_Surge_Absorbing_Switch.png}
+        \includegraphics[width=0.23\columnwidth]{figure/4_详细设计/硬件设计/No_Surge_Absorbing_Switch.png}
     }
     \subfigure[无浪涌吸收正反切 \label{fig:have_surge_absorbing_switch}]{
         \centering
-        \includegraphics[width=0.23\columnwidth]{figure/设计方案/硬件设计/Have_Surge_Absorbing_Switch.png}
+        \includegraphics[width=0.23\columnwidth]{figure/4_详细设计/硬件设计/Have_Surge_Absorbing_Switch.png}
     }
     \caption{有浪涌吸收模块对比 \label{fig:wheather_have_surge_absorbing_compare}}
 \end{figure}
@@ -155,11 +155,11 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
     \centering
     \subfigure[早期版本电路 \label{fig:surge_absorbing_early}]{
         \centering
-        \includegraphics[width=0.4\columnwidth]{figure/设计方案/硬件设计/Surge_Absorbing_Early.png}
+        \includegraphics[width=0.4\columnwidth]{figure/4_详细设计/硬件设计/Surge_Absorbing_Early.png}
     }
     \subfigure[现在版本电路 \label{fig:surge_absorbing_now}]{
         \centering
-        \includegraphics[width=0.4\columnwidth]{figure/设计方案/硬件设计/Surge_Absorbing_Now.png}
+        \includegraphics[width=0.4\columnwidth]{figure/4_详细设计/硬件设计/Surge_Absorbing_Now.png}
     }
     \caption{早期和现在的浪涌吸收模块 \label{fig:surge_absorbing_version}}
 \end{figure}
@@ -168,7 +168,7 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
 如 \figref {fig:升压1.0版本大小对比}所示，在超级电容中，升压模块1.0版本的设计最大功率为电源管理额定功率的两倍，即$\qty{240}{\W}$。由于升压模块有最低的输入电压限制，以及在输入输出电压压差较大时会导致输出端产生很大的纹波，且电源转换效率会变得很低，所以我们将升压模块的输入电压范围设置为$7\sim16V$。在1.0版本中采用两相供电技术，其中一相在原有的纹波波谷处补充输出，首先直接补偿了原有的电压跌落，且在同样的频率下，由于两相半桥开关状态相互错开，输出纹波的频率即为开关频率的两倍，更高频的纹波简化了输出滤波的设计，单个电感中的开关电流也会减小，提高功率密度。
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.6\columnwidth]{figure/设计方案/硬件设计/Boost_Version_Compare.jpg}
+    \includegraphics[width=0.6\columnwidth]{figure/4_详细设计/硬件设计/Boost_Version_Compare.jpg}
     \caption{升压1.0版本大小对比}     
     \label{fig:升压1.0版本大小对比}
 \end{figure}
@@ -181,7 +181,7 @@ BQ24640电压基准$V_{iset}$的上拉电阻被微控制器的DAC输出上拉，
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/硬件设计/四相连接图.png}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/硬件设计/四相连接图.png}
     \caption{四相拓扑连接图}        
     \label{fig:四相拓扑连接图}
 \end{figure}
@@ -189,7 +189,7 @@ LTC3897与LTC3784相比,其在宽输入范围的同时，内置了一个理想�
 
  \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.7\columnwidth]{figure/设计方案/硬件设计/boost.pdf}
+    \includegraphics[width=0.7\columnwidth]{figure/4_详细设计/硬件设计/boost.pdf}
     \caption{升压2.0原理图}        
     \label{fig:升压2.0原理图}
 \end{figure}
@@ -224,7 +224,7 @@ P_{sync}=\frac{V_{in}}{V_{out}} \times (\frac{I_{out(max)}}{2})^2 \times (1+\del
 最终升压模块选用HSBB4052作为同步管，由于该款MOS管的封装使用的是$\qty{16}{\V}$，的无引线扁平封装，在低电压时选用该MOS管作为控制管温升将超过了该款MOS管$\qty{50}{\circ}$，C的最大容许工作温度极限，所以选用了NTMFS5C670NL作为控制管。这两种型号都具有极低的栅极充电电荷和米勒电容，极大地减少了高工作频率下MOS管开关动作引起的损耗。
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.26\columnwidth ,angle=90]{figure/设计方案/硬件设计/Boost2.0_test.jpg}
+    \includegraphics[width=0.26\columnwidth ,angle=90]{figure/4_详细设计/硬件设计/Boost2.0_test.jpg}
     \caption{升压2.0测试版}        
     \label{fig:升压2.0测试版}
 \end{figure}
@@ -259,11 +259,11 @@ f_{cross}=\frac{1}{2\pi} \cdot \sqrt{\frac{1}{C_{ff} \cdot (C_{ff}+C_{flt})} \cd
     \centering
     \subfigure[$C_{ff}$与$C_{flt}$选择范围 \label{fig:boost_cff_cfft_range}]{
         \centering
-        \includegraphics[width=0.44\columnwidth]{figure/设计方案/硬件设计/Boost_Cff_Cfft_Range.png}
+        \includegraphics[width=0.44\columnwidth]{figure/4_详细设计/硬件设计/Boost_Cff_Cfft_Range.png}
     }
     \subfigure[环路带宽限制 \label{fig:boost_bandwidth_limit}]{
         \centering
-        \includegraphics[width=0.44\columnwidth]{figure/设计方案/硬件设计/Boost_Bandwidth_Limit.png}
+        \includegraphics[width=0.44\columnwidth]{figure/4_详细设计/硬件设计/Boost_Bandwidth_Limit.png}
     }
     \caption{Boost环路补偿计算}
     \label{fig:boost_loop_cal1}
@@ -293,14 +293,14 @@ f_{cross}=\frac{1}{2\pi} \cdot \sqrt{\frac{1}{C_{ff} \cdot (C_{ff}+C_{flt})} \cd
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=1\columnwidth]{figure/设计方案/硬件设计/Boost_Loop_Compensation_Sch.PNG}
+    \includegraphics[width=1\columnwidth]{figure/4_详细设计/硬件设计/Boost_Loop_Compensation_Sch.PNG}
     \caption{环路补偿网络框图与补偿增益曲线}
     \label{fig:boost_loop_compensation_sch}
 \end{figure}
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=1\columnwidth]{figure/设计方案/硬件设计/Boost_Type2_Compensation_Relation.PNG}
+    \includegraphics[width=1\columnwidth]{figure/4_详细设计/硬件设计/Boost_Type2_Compensation_Relation.PNG}
     \caption{II型补偿网络器件参数与补偿增益曲线关系}
     \label{fig:boost_type2_compensation_relation}
 \end{figure}
@@ -308,17 +308,17 @@ f_{cross}=\frac{1}{2\pi} \cdot \sqrt{\frac{1}{C_{ff} \cdot (C_{ff}+C_{flt})} \cd
 
 \subsubsection{计算机辅助设计验证仿真}
 
-本模块的设计将使用ADI提供的LTpowerCAD以及LTspice等工具进行辅助设计和仿真。如 \figref{fig:ltpowercad_power_stage} 所示，首先使用LTpowerCAD辅助确定包括环路补偿在内的参数。确定参数后，使用LTspice仿真电源的运行效果。如 \figref {fig:ltspice_simulation} 所示，搭建原理图，设置输入电压为$\qty{13.8}{\V}$，仿真电感纹波电流最大的状况，以确定最大的输出纹波电压。仿真得纹波电压为$\qty{0.031}{\V}$，纹波系数仅有$1.12\textperthousand$。至此，升压模块设计告一段落。
+本模块的设计将使用ADI提供的LTpowerCAD以及LTspice等工具进行辅助设计和仿真。如 \figref{fig:ltpowercad_power_stage} 所示，首先使用LTpowerCAD辅助确定包括环路补偿在内的参数。确定参数后，使用LTspice仿真电源的运行效果。如 \figref {fig:ltspice_simulation} 所示，搭建原理图，设置输入电压为$\qty{13.8}{\V}$，仿真电感纹波电流最大的状况，以确定最大的输出纹波电压。仿真得纹波电压为$\qty{0.031}{\V}$，纹波系数仅有\qty{1.12}{\perthousand}。至此，升压模块设计告一段落。
 
 \begin{figure}[hbt!]
     \centering
     \subfigure[LTpowerCAD功率级设计页面 \label{fig:ltpowercad_power_stage}]{
         \centering
-        \includegraphics[width=0.5\columnwidth]{figure/设计方案/硬件设计/Boost_LTPowerCAD.png}
+        \includegraphics[width=0.5\columnwidth]{figure/4_详细设计/硬件设计/Boost_LTPowerCAD.png}
     }
     \subfigure[在LTspice中搭建仿真原理图 \label{fig:ltspice_simulation}]{
         \centering
-        \includegraphics[width=0.45\columnwidth]{figure/设计方案/硬件设计/Boost_LTSPICE.png}
+        \includegraphics[width=0.45\columnwidth]{figure/4_详细设计/硬件设计/Boost_LTSPICE.png}
     }
     \caption{部分设计界面展示 \label{fig:boost_design_page}}
 \end{figure}
@@ -330,11 +330,11 @@ f_{cross}=\frac{1}{2\pi} \cdot \sqrt{\frac{1}{C_{ff} \cdot (C_{ff}+C_{flt})} \cd
     \centering
     \subfigure[中心板PCB 3D图\label{fig:中心板PCB 3D图} ]{
         \centering
-        \includegraphics[height=0.4\columnwidth]{figure/设计方案/硬件设计/中心板.png}
+        \includegraphics[height=0.4\columnwidth]{figure/4_详细设计/硬件设计/中心板.png}
     }
     \subfigure[中心板实物图\label{fig:中心板实物}]{
         \centering
-        \includegraphics[height=0.4\columnwidth]{figure/设计方案/硬件设计/中心板实物.jpg}
+        \includegraphics[height=0.4\columnwidth]{figure/4_详细设计/硬件设计/中心板实物.jpg}
     }
     \caption{自制中心板展示 \label{fig:自制中心板展示}}
 \end{figure}
@@ -349,7 +349,7 @@ f_{cross}=\frac{1}{2\pi} \cdot \sqrt{\frac{1}{C_{ff} \cdot (C_{ff}+C_{flt})} \cd
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/硬件设计/nucpower.png}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/硬件设计/nucpower.png}
     \caption{LM3150原理图}        
     \label{fig:nucpower_设计方案}
 \end{figure}
@@ -373,12 +373,12 @@ BMI088及其控制板的设计原理图如 \figref {fig:BMI088_设计方案}与 
     \centering
     \subfigure[BMI088原理图\label{fig:BMI088_设计方案} ]{
         \centering
-        \includegraphics[height=0.4\linewidth]{figure/设计方案/硬件设计/BMI088.png}
+        \includegraphics[height=0.4\linewidth]{figure/4_详细设计/硬件设计/BMI088.png}
     }
     
     \subfigure[IMUbase原理图\label{fig:IMUbase_设计方案}]{
         \centering
-        \includegraphics[height=0.4\linewidth]{figure/设计方案/硬件设计/IMUbase.png}
+        \includegraphics[height=0.4\linewidth]{figure/4_详细设计/硬件设计/IMUbase.png}
     }
     \caption{IMU模块 \label{fig:IMU模块设计方案}}
 \end{figure}
@@ -394,11 +394,11 @@ BMI088及其控制板的设计原理图如 \figref {fig:BMI088_设计方案}与 
     \centering
     \subfigure[紫外光LED灯板原理图\label{fig:紫外光LED灯板_设计方案} ]{
         \centering
-        \includegraphics[height=0.3\columnwidth]{figure/设计方案/硬件设计/紫外光LED灯板.png}
+        \includegraphics[height=0.3\columnwidth]{figure/4_详细设计/硬件设计/紫外光LED灯板.png}
     }
     \subfigure[LED恒流驱动板原理图\label{fig:LED恒流驱动板_设计方案}]{
         \centering
-        \includegraphics[height=0.3\columnwidth]{figure/设计方案/硬件设计/LED恒流驱动板.png}
+        \includegraphics[height=0.3\columnwidth]{figure/4_详细设计/硬件设计/LED恒流驱动板.png}
     }
     \caption{荧光充能装置 \label{fig:荧光充能装置}}
 \end{figure}

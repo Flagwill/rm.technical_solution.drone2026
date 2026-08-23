@@ -9,27 +9,27 @@
     \centering
     \subfigure[\#1 Hero]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/hero.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/hero.jpg}
     }
     \subfigure[\#2 Engineer]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/engineer.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/engineer.jpg}
     }
     \subfigure[\#3 Standard (Mecanum)]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard3.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/standard3.jpg}
     }
     \subfigure[\#4 Standard (Swerve)]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard4.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/standard4.jpg}
     }
     \subfigure[\#5 Standard (Mecanum)]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/standard5.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/standard5.jpg}
     }
     \subfigure[\#6 Sentry]{
         \centering
-        \includegraphics[width=0.3\columnwidth]{figure/设计方案/软件设计/sentry.jpg}
+        \includegraphics[width=0.3\columnwidth]{figure/4_详细设计/软件设计/sentry.jpg}
     }
     \caption{部署了 rm-controls 的机器人 }
     \label{fig:deployed_robots_设计方案}
@@ -65,7 +65,7 @@ lower_gimbal_controller:
 所有机器人都能在Gazebo进行多刚体动力学仿真，且仿真和实车运行的代码不需要相互移植，是同一份代码甚至同一个二进制文件。除了发射控制器，其他模块和控制器在开发时均会在仿真中调试和测试，打断点时可以做到时间暂停，在机械组还没有加工装配好车时已经可以把代码测试好，完成参数的粗调，大大提高开发和迭代效率。如：2022赛季全向轮机器人在加工装配好后只花不到一天时间就测试调试完所有程序。 \figref {fig:gazebo_swerve_设计方案} 为全向机器人在RMUC场地中的仿真。
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/gazebo.jpg}
+    \includegraphics[width=0.4\columnwidth]{figure/4_详细设计/软件设计/gazebo.jpg}
     \caption{全向轮步兵机器人仿真}
     \label{fig:gazebo_swerve_设计方案}
 \end{figure}
@@ -76,11 +76,11 @@ lower_gimbal_controller:
     \centering
     \subfigure[麦轮棍子仿真\label{fig:麦轮棍子}]{
         \centering
-        \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/mecanum_rolller.jpg}
+        \includegraphics[width=0.4\columnwidth]{figure/4_详细设计/软件设计/mecanum_rolller.jpg}
     }
     \subfigure[全向轮棍子仿真\label{fig:全向轮棍子}]{
         \centering
-        \includegraphics[width=0.4\columnwidth]{figure/设计方案/软件设计/omni_roller.jpg}
+        \includegraphics[width=0.4\columnwidth]{figure/4_详细设计/软件设计/omni_roller.jpg}
     }
     \caption{麦轮和全向轮棍子仿真 \label{fig:麦轮和全向轮棍子}}
 \end{figure}
@@ -91,19 +91,19 @@ lower_gimbal_controller:
 \begin{figure}[hbt!]
     \centering
     \subfigure[Jetson AGX Xariver]{
-        \centering    \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/jetson_xavier.jpg}
+        \centering    \includegraphics[width=0.2\columnwidth]{figure/4_详细设计/软件设计/jetson_xavier.jpg}
     }
     \subfigure[Jetson AGX NX]{
         \centering
-        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/jetson_nx.jpg}
+        \includegraphics[width=0.2\columnwidth]{figure/4_详细设计/软件设计/jetson_nx.jpg}
     }
     \subfigure[DJI Manifold 2]{
         \centering
-        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/dji_manifold.jpg}
+        \includegraphics[width=0.2\columnwidth]{figure/4_详细设计/软件设计/dji_manifold.jpg}
     }
     \subfigure[Intel NUC]{
         \centering
-        \includegraphics[width=0.2\columnwidth]{figure/设计方案/软件设计/intel_nuc.jpg}
+        \includegraphics[width=0.2\columnwidth]{figure/4_详细设计/软件设计/intel_nuc.jpg}
     }
     \caption{rm-controls 兼容的部分计算设备 }
     \label{fig:pc_device_设计方案}
@@ -116,7 +116,7 @@ lower_gimbal_controller:
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.7\columnwidth]{figure/设计方案/软件设计/rqt_home.png}
+    \includegraphics[width=0.7\columnwidth]{figure/4_详细设计/软件设计/rqt_home.png}
     \caption{rqt调试软件}
     \label{fig:rqt_home_设计方案}
 \end{figure}
@@ -128,7 +128,7 @@ lower_gimbal_controller:
 
  \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.5\columnwidth]{figure/设计方案/软件设计/rqt_virtual_dbus.png}
+    \includegraphics[width=0.5\columnwidth]{figure/4_详细设计/软件设计/rqt_virtual_dbus.png}
     \caption{rqt虚拟DBUS}
     \label{fig:rqt_home_虚拟DBUS}
 \end{figure}
@@ -186,7 +186,7 @@ lower_gimbal_controller:
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/rqt_graph.png}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/软件设计/rqt_graph.png}
     \caption{哨兵机器人节点图}
     \label{fig:standard_node}
 \end{figure}
@@ -198,7 +198,7 @@ lower_gimbal_controller:
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/diagram_rm_controls.pdf}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/软件设计/diagram_rm_controls.pdf}
     \caption{rm-contorls 框架示意框图；浅蓝色代表一个Node（进程）；浅绿色代表类名或相关机制；浅黄色表示配置文件和数据；橙色为ROS通信中的话题、节点、动作；红色为实车。}
     \label{fig:diagram_rm_controls_设计方案}
 \end{figure}
@@ -433,7 +433,7 @@ controllers:
 %软件整体的运行流程、数据流向和处理过程。
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/ros_control.png}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/软件设计/ros_control.png}
     \caption{ros-control框图，图源\cite{roscontr63:online}}
     \label{fig:ros-control_设计方案}
 \end{figure}
@@ -470,7 +470,7 @@ Transmissions 是实际机器人执行器于关节的状态和指令映射，有
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/transmission.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/软件设计/transmission.png}
     \caption{差分Transmissions，图源\cite{transmis19:online}}
     \label{fig:trans_diff}
 \end{figure}
@@ -498,7 +498,7 @@ Transmissions 是实际机器人执行器于关节的状态和指令映射，有
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figure/设计方案/软件设计/ros_control+gazebo.png}
+    \includegraphics[width=0.9\columnwidth]{figure/4_详细设计/软件设计/ros_control+gazebo.png}
     \caption{Gazbeo + ROS + ros\_control 简图，图源\cite{GazeboTu75:online}}
     \label{fig:gazebo}
 \end{figure}
@@ -512,11 +512,11 @@ Transmissions 是实际机器人执行器于关节的状态和指令映射，有
     \centering
     \subfigure[力矩限制]{
         \centering
-        \includegraphics[width=0.35\columnwidth]{figure/设计方案/软件设计/effort_limit.png}
+        \includegraphics[width=0.35\columnwidth]{figure/4_详细设计/软件设计/effort_limit.png}
     }
     \subfigure[速度限制]{
         \centering
-        \includegraphics[width=0.35\columnwidth]{figure/设计方案/软件设计/velocity_limit.png}
+        \includegraphics[width=0.35\columnwidth]{figure/4_详细设计/软件设计/velocity_limit.png}
     }
     \caption{软限位的限制方式，图源\cite{pr2contr64:online}}
     \label{fig:soft_limit_设计方案}
@@ -539,7 +539,7 @@ Transmissions 是实际机器人执行器于关节的状态和指令映射，有
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/heat_limit.pdf}
+    \includegraphics[width=0.6\columnwidth]{figure/4_详细设计/软件设计/heat_limit.pdf}
     \caption{枪口热量限制方案}
     \label{fig:heat_limit_设计方案}
 \end{figure}
@@ -580,7 +580,7 @@ k = \frac{-\sum \lvert \omega_\textrm{real}\tau_\textrm{cmd} \rvert + \sqrt{\sum
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/power_limit.png}
+    \includegraphics[width=0.6\columnwidth]{figure/4_详细设计/软件设计/power_limit.png}
     \caption{底盘功率限制效果}
     \label{fig:power_limit}
 \end{figure}
@@ -591,7 +591,7 @@ k = \frac{-\sum \lvert \omega_\textrm{real}\tau_\textrm{cmd} \rvert + \sqrt{\sum
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.65\columnwidth]{figure/设计方案/软件设计/决策流程图.png}
+    \includegraphics[width=0.65\columnwidth]{figure/4_详细设计/软件设计/决策流程图.png}
     \caption{决策流程图}
     \label{fig:decision}
 \end{figure}
@@ -618,7 +618,7 @@ k = \frac{-\sum \lvert \omega_\textrm{real}\tau_\textrm{cmd} \rvert + \sqrt{\sum
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/imu与相机硬件同步.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/软件设计/imu与相机硬件同步.png}
     \caption{imu与相机硬件同步方案}
     \label{fig:imu_camera_sync}
 \end{figure}
@@ -683,7 +683,7 @@ $x_n$、$y_n$、$z_n$为目标在世界坐标系的坐标，$\dot x_n$、$\dot y
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.5\columnwidth]{figure/设计方案/软件设计/CI&CD.png}
+    \includegraphics[width=0.5\columnwidth]{figure/4_详细设计/软件设计/CI&CD.png}
     \caption{持续集成与持续部署流程}
     \label{fig:持续集成与持续部署流程}
 \end{figure}
@@ -705,7 +705,7 @@ GitHub Actions 有以下这些：
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/ci.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/软件设计/ci.png}
     \caption{借助 GitHub Actions 进行持续集成}
     \label{fig:ci_设计方案}
 \end{figure}
@@ -721,7 +721,7 @@ sudo apt install ros-noetic-rm-chassis-controllers
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\columnwidth]{figure/设计方案/软件设计/rostest.png}
+    \includegraphics[width=0.8\columnwidth]{figure/4_详细设计/软件设计/rostest.png}
     \caption{单元测试运行结果}
     \label{fig:rostest_设计方案}
 \end{figure}    
@@ -734,7 +734,7 @@ sudo apt install ros-noetic-rm-chassis-controllers
 
 \begin{figure}[htbp!]
     \centering
-    \includegraphics[width=0.6\columnwidth]{figure/设计方案/软件设计/detect_apriltag.jpg}
+    \includegraphics[width=0.6\columnwidth]{figure/4_详细设计/软件设计/detect_apriltag.jpg}
     \caption{识别并跟踪AprilTag}
     \label{fig:detect_apriltag}
 \end{figure}
