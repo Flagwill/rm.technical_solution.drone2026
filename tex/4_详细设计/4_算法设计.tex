@@ -207,4 +207,161 @@ MID-360 里程计输出采用机体 FLU、世界 ENU 约定，而 MAVROS 期望�
 \label{tab:飞机导航软件包}
 \end{table}
 
+\section{自瞄系统详细设计}
+
+自瞄系统由传感器采集、装甲板检测、三维定位、目标状态维护、运动预测、弹道解算和控制指令仲裁组成。系统在保持原有目标状态管理与打击决策框架的基础上，针对空中机器人高动态运行和多攻击任务并行的特点，对数据时序、实时推理、旋转目标模型、特殊目标处理和控制安全机制进行进一步完善。
+
+整体数据流可概括为：
+\begin{center}
+    相机与 IMU $\rightarrow$ \lstinline{SensorData}
+    $\rightarrow$ 装甲板检测
+    $\rightarrow$ PnP 三维定位
+    $\rightarrow$ 目标状态估计
+    $\rightarrow$ 未来命中位置预测
+    $\rightarrow$ 弹道解算
+    $\rightarrow$ \lstinline{RobotCmd}
+    $\rightarrow$ 模式仲裁
+    $\rightarrow$ 电控。
+\end{center}
+
+\subsection{图像与 IMU 时间同步}
+空中机器人姿态变化速度较快，若图像曝光时刻与姿态测量时刻不一致，会直接影响目标由相机坐标系向惯性坐标系的转换结果。当前传感器节点持续维护带时间戳的 IMU 姿态缓存。对于采样时刻为 $t_{\mathrm{cam}}$ 的图像，在缓存中寻找满足
+\begin{equation}
+    t_1 \le t_{\mathrm{cam}} \le t_2
+\end{equation}
+的相邻两条姿态 $q_1$ 和 $q_2$，并利用球面线性插值得到图像采样时刻对应姿态：
+\begin{equation}
+    q_{\mathrm{cam}} = \operatorname{Slerp}\left(
+        q_1, q_2,
+        \frac{t_{\mathrm{cam}}-t_1}{t_2-t_1}
+    \right).
+\end{equation}
+最终将图像、时间戳和 $q_{\mathrm{cam}}$ 统一封装至 \lstinline{SensorData}，检测和预测模块无需再次从异步姿态流中寻找对应状态。
+
+传感器节点同时监测 IMU 数据更新时间、串口读取状态和共享 IMU 发布状态。异常判断以真实经过时间为依据，而不是简单使用连续若干图像帧无新数据作为失效条件，从而避免在高帧率运行和模式切换过程中误判 IMU 故障。
+
+\subsection{双相机任务链与姿态共享}
+两套相机分别服务不同攻击任务。主相机直接读取外置 IMU，并通过 \lstinline{/sensor/shared_imu} 发布统一姿态数据；第二相机订阅该话题，将接收到的 IMU 数据写入自身缓存，再按照第二相机图像时间戳独立完成姿态同步。
+
+因此两套视觉链共享同一姿态基准，但分别维护独立的图像、相机标定、检测配置、预测配置和控制结果。12 mm 与 5 mm 装甲板自瞄在运行时分别实例化独立的 Detector 与 Predictor，复用相同算法实现，但加载与对应相机和发射机构匹配的参数，避免两种弹丸和两套成像系统之间发生状态或标定参数混用。
+
+\subsection{异步神经网络推理}
+装甲板网络输出候选目标的四个角点、颜色、机器人编号以及相应置信度。为降低网络推理对 ROS 回调链的阻塞，检测节点采用异步任务模型：
+\begin{center}
+    图像预处理 $\rightarrow$ 检查推理容量 $\rightarrow$ 异步提交
+    $\rightarrow$ GPU 推理 $\rightarrow$ 后处理回调
+    $\rightarrow$ \lstinline{DetectionResult}。
+\end{center}
+
+推理模块限制同时处于执行状态的任务数量。当计算资源已经饱和时，新的任务不继续进入等待队列，而是直接舍弃。对于实时自瞄而言，处理最新目标状态比完整处理全部历史图像更重要，该策略能够避免高负载时累计延迟持续增长。
+
+检测节点同时检查输入时间戳的单调性，当新到达数据的时间早于上一有效帧时拒绝处理，防止异步执行过程中乱序结果重新进入目标预测链。
+
+\subsection{装甲板三维定位与云台旋转中心补偿}
+根据装甲板实际尺寸和相机内参，对网络检测得到的四个角点进行 PnP 解算，获得目标相对于相机光心的位置 ${}^{C}\boldsymbol{p}_A$。由于相机光心与云台旋转中心之间存在固定偏移 ${}^{C}\boldsymbol{p}_G$，目标状态估计前首先进行
+\begin{equation}
+    {}^{C}\boldsymbol{p}_A^{G}
+    = {}^{C}\boldsymbol{p}_A - {}^{C}\boldsymbol{p}_G .
+\end{equation}
+随后结合该图像对应的 IMU 姿态，将修正后的目标位置转换到重力对齐的惯性坐标系。
+
+这一处理将目标观测原点从偏置的相机光心转换至实际云台旋转中心，可减少云台旋转时相机偏心运动造成的虚假目标速度，使运动模型更接近真实目标运动。
+
+\subsection{普通旋转目标状态模型}
+普通步兵进入小陀螺状态后，需要同时描述整车中心平移和装甲板围绕中心的旋转。当前 \lstinline{Top4Model} 对状态表示进行了简化，减少难以从短时视觉观测中稳定估计的高阶加速度状态，主要使用目标中心位置、中心速度、装甲板高度、整车朝向、连续角速度和旋转半径描述目标。
+
+目标中心采用近似匀速模型：
+\begin{equation}
+\begin{aligned}
+    x_{k+1} &= x_k + v_{x,k}\Delta t, & v_{x,k+1} &= v_{x,k},\\
+    y_{k+1} &= y_k + v_{y,k}\Delta t, & v_{y,k+1} &= v_{y,k}.
+\end{aligned}
+\end{equation}
+整车朝向采用连续角速度模型：
+\begin{equation}
+    \theta_{k+1}=\theta_k+\omega_k\Delta t,
+    \qquad
+    \omega_{k+1}=\omega_k.
+\end{equation}
+
+相较于引入额外平移加速度和角加速度状态，该表示减少了高阶状态对测量噪声的敏感性，在高频视觉更新条件下更加便于稳定估计，同时保留对连续小陀螺运动的预测能力。
+
+\subsection{前哨站专用运动模型}
+前哨站具有三块周期旋转装甲板，其结构和运动模式与普通四装甲板车辆不同，因此当前系统建立独立 \lstinline{OutpostModel}。模型显式维护目标中心及其平移速度、基础高度、整体朝向、连续角速度和旋转半径，并维护三个装甲板 slot 与实际观测之间的对应关系。
+
+\subsubsection{静止与旋转状态分级处理}
+当前前哨站并非始终使用完整旋转模型。目标尚未进入稳定旋转状态时，直接使用单装甲板 \lstinline{ArmorModel} 进行瞄准；检测到持续旋转后，再使用 \lstinline{OutpostModel} 预测整车中心和未来装甲板位置：
+\begin{center}
+    静止前哨站 $\rightarrow$ \lstinline{ArmorModel},\qquad
+    旋转前哨站 $\rightarrow$ \lstinline{OutpostModel}.
+\end{center}
+这样可以避免静止目标额外受到车体中心、旋转半径和装甲板 slot 等高维状态估计误差影响。
+
+\subsubsection{连续角速度 EKF}
+旋转前哨站的角速度作为连续状态 $\omega$ 直接参与 EKF 估计，其基本状态传播满足
+\begin{equation}
+    \theta_{k+1}=\theta_k+\omega_k\Delta t.
+\end{equation}
+模型通过角速度大小判断前哨站是否进入旋转状态，并对旋转激活与退出使用不同阈值形成迟滞，避免 $\omega$ 在临界值附近波动时模型频繁切换。对于比赛规则下接近固定转速的稳定旋转状态，还可按照配置的物理转速约束预测结果，使发弹相位更加稳定。
+
+\subsection{前哨站顶部结构重投影过滤}
+空中视角下，前哨站顶部结构可能与腰部可击打装甲板同时进入检测范围。为降低顶部结构误识别对运动模型的影响，系统不只依据目标的绝对高度进行过滤，而是分别构建正常腰部装甲板与顶部结构的三维姿态假设，并将各自四个空间角点重新投影到图像。
+
+对于假设 $H$，定义重投影误差：
+\begin{equation}
+    E(H)=\sum_{i=1}^{4}
+    \left\|
+        \boldsymbol{u}^{H}_{i,\mathrm{proj}}
+        -\boldsymbol{u}_{i,\mathrm{det}}
+    \right\|_2^2 .
+\end{equation}
+分别得到 $E_{\mathrm{normal}}$ 和 $E_{\mathrm{top}}$。若顶部结构假设能够明显更好地解释当前四角点观测，则将该检测结果从有效打击目标中滤除。该方法直接比较空间物理模型与实际图像形状的一致性，更适合飞机观察角度不断变化的场景。
+
+\subsection{预测时间与目标模型解耦}
+自瞄系统需要预测实际控制或命中时刻的目标位置。整体时延可表示为
+\begin{equation}
+\begin{aligned}
+    t_{\mathrm{hit}} = t_{\mathrm{img}}
+    &+ t_{\mathrm{img\rightarrow predict}}
+    + t_{\mathrm{predict\rightarrow send}}
+    + t_{\mathrm{send\rightarrow control}} \\
+    &+ t_{\mathrm{control\rightarrow fire}}
+    + t_{\mathrm{flight}} .
+\end{aligned}
+\end{equation}
+其中 $t_{\mathrm{flight}}$ 根据当前弹速和目标距离计算。
+
+不同目标并不强制使用完全相同的预测时延。普通连续跟踪装甲板使用独立的 Armor 预测时间接口；前哨站则保留针对其特殊发弹相位和机械响应的额外时延参数。这样可以针对特殊目标调节击打时机，而不会同步改变普通装甲板的预测距离。
+
+\subsection{多任务控制仲裁与失效保护}
+当前视觉攻击系统同时存在普通装甲板自瞄、5 mm 自瞄、基地打击和能量机关等不同算法链。各算法分别向独立话题发布 \lstinline{RobotCmd}，不直接竞争最终控制出口。\lstinline{mode-switcher} 根据当前 \lstinline{ProgramMode} 选择唯一有效控制源，再统一发布至最终云台与发射控制话题。
+
+模式发生变化时，首先发送 \lstinline{IDLE} 指令，并在短暂 guard window 内拒绝旧模式残留命令；进入新模式后，如果当前有效算法在规定时间内没有继续产生控制结果，watchdog 自动再次输出 \lstinline{IDLE}。该机制保证多条攻击链可以并行运行，但任意时刻仅有一个算法能够实际控制云台和发射机构。
+
+\subsection{MAP 自运动补偿实验链}
+飞机自身运动时，视觉测得的目标相对速度满足
+\begin{equation}
+    \boldsymbol{v}_{\mathrm{rel}}
+    = \boldsymbol{v}_{\mathrm{target}}
+    - \boldsymbol{v}_{\mathrm{ego}} .
+\end{equation}
+当飞机自身速度快速变化时，仅在相对坐标中估计目标状态可能将部分己方运动解释为敌方运动。为验证高动态条件下的进一步改进空间，当前系统实现了一条基于定位里程计的 MAP 自运动补偿实验链。
+
+定位模块通过 \lstinline{/Odometry/imu_interpolation} 提供飞机在地图坐标系中的位置、姿态、线速度和角速度。视觉仍负责目标观测，系统将目标转换至 MAP 坐标系并分别预测未来时刻的目标位置和己方云台位置：
+\begin{equation}
+    {}^{M}\boldsymbol{p}_{\mathrm{target}}(t),
+    \qquad
+    {}^{M}\boldsymbol{p}_{\mathrm{gimbal}}(t).
+\end{equation}
+最终形成相对瞄准向量：
+\begin{equation}
+    \boldsymbol{p}_{\mathrm{aim}}(t)
+    = {}^{M}\boldsymbol{p}_{\mathrm{target}}(t)
+    - {}^{M}\boldsymbol{p}_{\mathrm{gimbal}}(t).
+\end{equation}
+
+为保证时间和坐标一致性，该链维护里程计缓存与云台状态缓存，按照图像时间进行状态同步，并处理 MAP 坐标系与视觉惯性坐标系之间的对齐。控制使用的视线角速度需要同时反映目标和己方运动，而调试显示仍可单独保留目标自身运动速度，避免两种速度语义混淆。
+
+\textbf{当前状态：MAP 自运动补偿仍处于实验与实车测试阶段，尚未作为正式比赛自瞄主链使用。}正式链路仍保持原有视觉预测方式，实验链通过独立开关启用，以便在不影响现有系统稳定性的前提下继续进行对比验证。
+
 \newpage
