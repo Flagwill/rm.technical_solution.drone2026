@@ -1,5 +1,23 @@
 \section{定位与导航}
 
+\subsection{主要传感器参数}
+空中机器人视觉（导航）系统依靠 3D 激光雷达与惯性测量单元两类传感器完成自定位与状态估计，其参数如 \tabref{tab:飞机传感器型号、参数及数量}所示：
+
+\begin{table}[hbtp!]
+    \centering
+    \begin{tabular}{ m{3cm}  m{4cm}  m{6cm} m{1cm}}
+    \toprule
+      传感器名称 & 型号 & 参数 & 数量 \\
+        \midrule
+        3D 激光雷达 & Livox MID-360 & 点云输出 200,000 点/秒，点云帧率 $\qty{10}{\Hz}$，非重复扫描 & 1 \\   
+         \midrule
+         IMU & 机载惯性测量单元 & 三轴角速度、三轴加速度，高频输出（用于雷达里程计插值） & 1 \\
+    \toprule
+    \end{tabular}
+    \caption{飞机传感器型号、参数及数量}
+    \label{tab:飞机传感器型号、参数及数量}
+\end{table}
+
 \subsection{定位}
 空中机器人在全场飞行作业，其定位需要在全局坐标系（\lstinline{map}）下连续、可靠地维护机体位姿，同时保证局部控制的实时性。我们将定位系统拆分为“全局定位 + 局部高频位姿”两级，并通过健康监测保证位姿的可用性与安全性。
 
