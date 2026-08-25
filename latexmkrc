@@ -6,3 +6,5 @@ $xelatex = 'xelatex -interaction=nonstopmode -halt-on-error %O %S';
 $bibtex = 'biber';
 # 自动运行参考文献处理
 $bibtex_use = 2;
+# 只构建主文档 main.tex，忽略根目录下的参考文件（如 tech_sol25.tex）
+@default_files = ('main.tex');
